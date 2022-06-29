@@ -1,0 +1,22 @@
+{
+  "name": "make",
+  "version": "0.0.0",
+  "description": "Patch engine to bootstrap a project",
+  "main": "index.js",
+  "author": "Cyril Bonaccini",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "build": "tsc",
+    "start": "node index.js"
+  },
+  "devDependencies": {
+    "cz-conventional-changelog": "^3.3.0",
+    "typescript": "^4.7.4"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
+}
