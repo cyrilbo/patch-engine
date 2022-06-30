@@ -1,14 +1,15 @@
 {
-  "name": "make",
+  "name": "patch-engine",
   "version": "0.0.0",
   "description": "Patch engine to bootstrap a project",
-  "main": "index.js",
+  "main": "build/index.js",
   "author": "Cyril Bonaccini",
   "license": "MIT",
   "private": false,
+  "type": "module",
   "scripts": {
     "build": "tsc",
-    "start": "node index.js"
+    "start": "node --es-module-specifier-resolution=node build/index.js"
   },
   "devDependencies": {
     "cz-conventional-changelog": "^3.3.0",
@@ -18,5 +19,8 @@
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
     }
+  },
+  "dependencies": {
+    "zx": "^7.0.4"
   }
 }
