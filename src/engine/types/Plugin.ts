@@ -1,3 +1,4 @@
+import { checkIsGitRepositoryClean } from '../../helpers/git/checkIsGitRepositoryClean.helper';
 import { Step } from './Step';
 
 export class Plugin {
@@ -20,9 +21,15 @@ export class Plugin {
     this.dependencies = params.dependencies ?? [];
   }
 
-  async run() {
+  async run(): Promise<boolean> {
+    const isGitRepositoryClean = await checkIsGitRepositoryClean();
+    if (!isGitRepositoryClean) return false;
     for (const step of this.steps) {
-      await step.run();
+      const isStepSuccessful = await step.run();
+      if (!isStepSuccessful) {
+        return false;
+      }
     }
+    return true;
   }
 }

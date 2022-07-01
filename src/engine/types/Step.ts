@@ -1,3 +1,3 @@
 export type Step = {
-  run: () => Promise<void>;
+  run: () => Promise<boolean>;
 };
