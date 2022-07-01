@@ -1,4 +1,8 @@
-import { checkIsGitRepositoryClean } from '../../helpers/git/checkIsGitRepositoryClean.helper';
+import {
+  printStepFailed,
+  printStepIsRunning,
+  printStepSucceeded,
+} from './Plugin.print';
 import { Step } from './Step';
 
 export class Plugin {
@@ -25,10 +29,14 @@ export class Plugin {
     const isGitRepositoryClean = await checkIsGitRepositoryClean();
     if (!isGitRepositoryClean) return false;
     for (const step of this.steps) {
+    for (const [index, step] of this.steps.entries()) {
+      printStepIsRunning(step, index);
       const isStepSuccessful = await step.run();
       if (!isStepSuccessful) {
+        printStepFailed();
         return false;
       }
+      printStepSucceeded();
     }
     return true;
   }

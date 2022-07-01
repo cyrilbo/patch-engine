@@ -3,6 +3,7 @@ import { Plugin } from '../../engine/types/Plugin';
 import { Step } from '../../engine/types/Step';
 
 const installStep: Step = {
+  name: 'install',
   run: async () => {
     console.log('install step');
     return true;
@@ -11,6 +12,7 @@ const installStep: Step = {
 };
 
 const applyPatchStep: Step = {
+  name: 'apply patch',
   run: async () => {
     console.log('Apply patch step');
     return true;
