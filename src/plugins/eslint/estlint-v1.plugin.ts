@@ -1,6 +1,6 @@
 // import { $ } from "zx";
-import { Plugin } from '../Plugin';
-import { Step } from '../Step';
+import { Plugin } from '../../engine/types/Plugin';
+import { Step } from '../../engine/types/Step';
 
 const installStep: Step = {
   run: async () => {
