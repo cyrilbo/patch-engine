@@ -1,10 +1,14 @@
+import { $ } from 'zx';
 import { Plugin } from '../../engine/types/Plugin';
 import { Step } from '../../engine/types/Step';
 
 const firstStep: Step = {
   name: 'first step of plugin b',
+  commitMessage: 'chore(b): doing something else',
   run: async () => {
-    console.log('doing something else');
+    const random = Math.floor(Math.random() * 1000);
+    await $`touch tmp/${random}.txt`;
+    await $`echo "${random}" > tmp/${random}.txt`;
     return true;
   },
 };
