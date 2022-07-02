@@ -1,12 +1,13 @@
+import { IPlugin } from './Plugin.interface';
 import {
   printStepFailed,
   printStepIsRunning,
   printStepSucceeded,
 } from './Plugin.print';
 import { GitService } from '../../services/git/git.service.impl';
-import { Step } from './Step';
+import { Step } from './Step.type';
 
-export class Plugin {
+export class Plugin implements IPlugin {
   id: string;
   displayName: string;
   version: string;

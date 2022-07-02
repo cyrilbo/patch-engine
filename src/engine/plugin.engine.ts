@@ -3,7 +3,7 @@ import {
   printPluginBeeingApplied,
 } from './plugin.engine.print';
 import { sortPlugins } from './core/sortPlugins.helper';
-import { Plugin } from './types/Plugin';
+import { Plugin } from './Plugin/Plugin.impl';
 
 const run = async (plugins: Plugin[]) => {
   const sortedPlugins = sortPlugins(plugins);

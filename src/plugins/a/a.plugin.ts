@@ -1,6 +1,6 @@
 import { $ } from 'zx';
-import { Plugin } from '../../engine/types/Plugin';
-import { Step } from '../../engine/types/Step';
+import { Plugin } from '../../engine/Plugin/Plugin.impl';
+import { Step } from '../../engine/Plugin/Step.type';
 
 const firstStep: Step = {
   name: 'first step of plugin a',

@@ -1,5 +1,5 @@
 import { chalk } from 'zx';
-import { Plugin } from './types/Plugin';
+import { Plugin } from './Plugin/Plugin.impl';
 
 const printSeparator = () =>
   console.log(

@@ -1,4 +1,4 @@
-import { Plugin } from '../types/Plugin';
+import { Plugin } from '../Plugin/Plugin.impl';
 import { adaptPluginsToDependencyList } from './dependencyGraph/pluginsToDependencyList.adapter';
 import { findTopologicalSort } from './dependencyGraph/topologicalSort.helper';
 
