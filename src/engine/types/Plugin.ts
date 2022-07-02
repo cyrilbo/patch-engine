@@ -1,10 +1,9 @@
-import { checkIsGitRepositoryClean } from '../../helpers/git/checkIsGitRepositoryClean.helper';
-import { commitChanges } from '../../helpers/git/commitChanges.helper';
 import {
   printStepFailed,
   printStepIsRunning,
   printStepSucceeded,
 } from './Plugin.print';
+import { GitService } from '../../services/git/git.service.impl';
 import { Step } from './Step';
 
 export class Plugin {
@@ -28,7 +27,7 @@ export class Plugin {
   }
 
   async run(): Promise<boolean> {
-    const isGitRepositoryClean = await checkIsGitRepositoryClean();
+    const isGitRepositoryClean = await GitService.checkIsGitRepositoryClean();
     if (!isGitRepositoryClean) return false;
     for (const [index, step] of this.steps.entries()) {
       printStepIsRunning(step, index);
@@ -38,7 +37,7 @@ export class Plugin {
         return false;
       }
       printStepSucceeded();
-      await commitChanges(step.commitMessage);
+      await GitService.commitChanges(step.commitMessage);
     }
     return true;
   }
