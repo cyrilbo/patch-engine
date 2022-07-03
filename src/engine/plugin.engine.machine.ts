@@ -88,14 +88,14 @@ export const createEngine = (
             loadingNextStep: {
               on: {
                 always: [
-                  { target: 'running', cond: hasStepToRun },
+                  { target: 'runningStep', cond: hasStepToRun },
                   { target: 'success', cond: doesNotHaveStepToRun },
                 ],
               },
             },
-            running: {
+            runningStep: {
               invoke: {
-                id: 'running',
+                id: 'runningStep',
                 src: runStep,
                 onError: {
                   target: 'failure',
