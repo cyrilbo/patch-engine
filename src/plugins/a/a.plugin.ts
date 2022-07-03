@@ -9,7 +9,6 @@ const firstStep: Step = {
     const random = Math.floor(Math.random() * 1000);
     await $`touch tmp/${random}.txt`;
     await $`echo "${random}" > tmp/${random}.txt`;
-    return true;
   },
 };
 
