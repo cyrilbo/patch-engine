@@ -9,9 +9,32 @@ export const printStepIsRunning = (step: Step, index: number) => {
   );
 };
 
-export const printStepFailed = () => {
+const printSeparator = () =>
+  console.log(
+    chalk.red('\n---------------------------------------------------------\n'),
+  );
+
+export const printStepFailed = (step: Step) => {
   console.log(chalk.red(' --> ') + chalk.bgRed('Failure ❌'));
-  console.log();
+  printSeparator();
+  console.log(
+    chalk.red(
+      'The task ' +
+        chalk.underline(step.name) +
+        ' has failed.\n\nFollow the procedure to fix this step before continuing :\n',
+    ),
+  );
+  step.failureProcedure.forEach((bulletPoint) => {
+    console.log(' - ', chalk.red(bulletPoint));
+  });
+  console.log(
+    chalk.red(
+      "\nOnce it's done, don't forget to " +
+        chalk.bgRedBright.bold('commit') +
+        ' your changes.',
+    ),
+  );
+  printSeparator();
 };
 
 export const printStepSucceeded = () => {

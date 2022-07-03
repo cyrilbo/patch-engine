@@ -178,7 +178,11 @@ export const createEngine = (
           const step = plugin.steps[context.currentPluginStepIndex];
           printStepIsRunning(step, context.currentPluginStepIndex);
         },
-        printStepFailed,
+        printStepFailed: (context) => {
+          const plugin = getPluginById(context.currentPluginId);
+          const step = plugin.steps[context.currentPluginStepIndex];
+          printStepFailed(step);
+        },
         printStepSucceeded,
       },
     },
