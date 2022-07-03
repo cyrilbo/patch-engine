@@ -63,11 +63,11 @@ export const createEngine = (
       states: {
         loadingNextPlugin: {
           always: [
-            { target: 'runPlugin', cond: hasPluginToRun },
+            { target: 'runningPlugin', cond: hasPluginToRun },
             { target: 'end', cond: doesNotHavePluginToRun },
           ],
         },
-        runPlugin: {
+        runningPlugin: {
           type: 'compound',
           initial: 'preRun',
           states: {

@@ -11,7 +11,7 @@ describe('PluginEngine', () => {
   it('should run a plugin when a plugin is passed', () => {
     const pluginMock = createPluginMock();
     const engine = createEngine([pluginMock]);
-    expect(engine.initialState.matches('runPlugin')).toBeTruthy();
+    expect(engine.initialState.matches('runningPlugin')).toBeTruthy();
   });
   it('should fail if prePluginRun hook fails', (done) => {
     const pluginMock = createPluginMock();
