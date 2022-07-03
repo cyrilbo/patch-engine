@@ -32,4 +32,17 @@ describe('PluginEngine', () => {
       })
       .start();
   });
+
+  it('should set currentPluginId when running the plugin', (done) => {
+    const pluginMock = createPluginMock();
+    const engine = createEngine([pluginMock]);
+    interpret(engine)
+      .onTransition((state) => {
+        if (state.matches('runningPlugin')) {
+          expect(state.context.currentPluginId).toEqual(pluginMock.id);
+          done();
+        }
+      })
+      .start();
+  });
 });

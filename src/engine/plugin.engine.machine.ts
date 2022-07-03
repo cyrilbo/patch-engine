@@ -28,7 +28,13 @@ const pluginExecutionValid = (context: {
 };
 
 const fallback = async () => {
-  return true;
+  return Promise.resolve(true);
+};
+
+type MachineContext = {
+  pluginsList: string[];
+  currentPluginId: string | undefined;
+  currentPluginError: string | undefined;
 };
 
 export const createEngine = (
@@ -54,6 +60,9 @@ export const createEngine = (
             {
               target: 'runningPlugin',
               cond: hasPluginToRun,
+              actions: assign<MachineContext>({
+                currentPluginId: (context) => context.pluginsList[0],
+              }),
             },
             { target: 'end' },
           ],
