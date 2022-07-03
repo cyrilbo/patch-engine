@@ -114,12 +114,13 @@ export const createEngine = (
               ],
             },
             runningStep: {
-              entry: ['printStepIsRunning'],
               invoke: {
                 id: 'runningStep',
                 src: async (context) => {
                   const plugin = getPluginById(context.currentPluginId);
-                  await plugin.steps[context.currentPluginStepIndex].run();
+                  const step = plugin.steps[context.currentPluginStepIndex];
+                  printStepIsRunning(step, context.currentPluginStepIndex);
+                  await step.run();
                 },
                 onError: {
                   target: 'failure',
@@ -172,11 +173,6 @@ export const createEngine = (
         printPluginBeeingApplied: (context) => {
           const plugin = getPluginById(context.currentPluginId);
           printPluginBeeingApplied(plugin);
-        },
-        printStepIsRunning: (context) => {
-          const plugin = getPluginById(context.currentPluginId);
-          const step = plugin.steps[context.currentPluginStepIndex];
-          printStepIsRunning(step, context.currentPluginStepIndex);
         },
         printStepFailed: (context) => {
           const plugin = getPluginById(context.currentPluginId);
