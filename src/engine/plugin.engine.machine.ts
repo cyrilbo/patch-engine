@@ -48,115 +48,104 @@ export const createEngine = (
   };
 
   const pluginsList = plugins.map((plugin) => plugin.id);
-  return createMachine(
-    {
-      id: 'engine',
-      initial: 'loadingNextPlugin',
-      context: {
-        pluginsList,
-        currentPluginId: undefined,
-        currentPluginStepIndex: undefined,
-        currentPluginError: undefined,
+  return createMachine({
+    id: 'engine',
+    initial: 'loadingNextPlugin',
+    context: {
+      pluginsList,
+      currentPluginId: undefined,
+      currentPluginStepIndex: undefined,
+      currentPluginError: undefined,
+    },
+    states: {
+      loadingNextPlugin: {
+        always: [
+          {
+            target: 'runningPlugin',
+            cond: hasPluginToRun,
+            actions: assign<MachineContext>({
+              currentPluginId: (context) => context.pluginsList[0],
+            }),
+          },
+          { target: 'end' },
+        ],
       },
-      states: {
-        loadingNextPlugin: {
-          always: [
-            {
-              target: 'runningPlugin',
-              cond: hasPluginToRun,
-              actions: assign<MachineContext>({
-                currentPluginId: (context) => context.pluginsList[0],
-              }),
-            },
-            { target: 'end' },
-          ],
-        },
-        runningPlugin: {
-          type: 'compound',
-          initial: 'preRun',
-          states: {
-            preRun: {
-              invoke: {
-                id: 'preRun',
-                src: onPrePluginRun,
-                onError: {
-                  target: 'failure',
-                  actions: assign({
-                    currentPluginError: (_, event) => event.data,
-                  }),
-                },
-                onDone: {
-                  target: 'loadingNextStep',
-                },
+      runningPlugin: {
+        type: 'compound',
+        initial: 'preRun',
+        states: {
+          preRun: {
+            invoke: {
+              id: 'preRun',
+              src: onPrePluginRun,
+              onError: {
+                target: 'failure',
+                actions: assign({
+                  currentPluginError: (_, event) => event.data,
+                }),
               },
-            },
-            loadingNextStep: {
-              always: [
-                {
-                  target: 'runningStep',
-                  cond: (context) => hasStepToRun(context, getPluginById),
-                  actions: assign<MachineContext>({
-                    currentPluginStepIndex: (context) =>
-                      context.currentPluginStepIndex === undefined
-                        ? 0
-                        : context.currentPluginStepIndex + 1,
-                  }),
-                },
-                { target: 'success' },
-              ],
-            },
-            runningStep: {
-              invoke: {
-                id: 'runningStep',
-                src: async (context) => {
-                  const plugin = getPluginById(context.currentPluginId);
-                  await plugin.steps[context.currentPluginStepIndex].run();
-                },
-                onError: {
-                  target: 'failure',
-                  actions: assign({
-                    currentPluginError: (_, event) => event.data,
-                  }),
-                },
-                onDone: {
-                  target: 'loadingNextStep',
-                },
+              onDone: {
+                target: 'loadingNextStep',
               },
-            },
-            success: {
-              type: 'final',
-              entry: assign<MachineContext>({
-                pluginsList: (context) => context.pluginsList.slice(1),
-                currentPluginId: undefined,
-                currentPluginStepIndex: undefined,
-              }),
-            },
-            failure: {
-              type: 'final',
             },
           },
-          onDone: [
-            {
-              target: 'loadingNextPlugin',
-              cond: pluginExecutionValid,
+          loadingNextStep: {
+            always: [
+              {
+                target: 'runningStep',
+                cond: (context) => hasStepToRun(context, getPluginById),
+                actions: assign<MachineContext>({
+                  currentPluginStepIndex: (context) =>
+                    context.currentPluginStepIndex === undefined
+                      ? 0
+                      : context.currentPluginStepIndex + 1,
+                }),
+              },
+              { target: 'success' },
+            ],
+          },
+          runningStep: {
+            invoke: {
+              id: 'runningStep',
+              src: async (context) => {
+                const plugin = getPluginById(context.currentPluginId);
+                await plugin.steps[context.currentPluginStepIndex].run();
+              },
+              onError: {
+                target: 'failure',
+                actions: assign({
+                  currentPluginError: (_, event) => event.data,
+                }),
+              },
+              onDone: {
+                target: 'loadingNextStep',
+              },
             },
-            // If the condition is false, validation failed, so go to invalid
-            {
-              target: 'failure',
-            },
-          ],
+          },
+          success: {
+            type: 'final',
+            entry: assign<MachineContext>({
+              pluginsList: (context) => context.pluginsList.slice(1),
+              currentPluginId: undefined,
+              currentPluginStepIndex: undefined,
+            }),
+          },
+          failure: {
+            type: 'final',
+          },
         },
-        failure: {},
-        end: {},
+        onDone: [
+          {
+            target: 'loadingNextPlugin',
+            cond: pluginExecutionValid,
+          },
+          {
+            target: 'failure',
+          },
+        ],
       },
+      failure: {},
+      end: {},
     },
-    {
-      actions: {},
-      delays: {},
-      guards: {},
-      services: {
-        /* ... */
-      },
-    },
-  );
+  });
 };
