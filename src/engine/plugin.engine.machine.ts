@@ -81,11 +81,11 @@ export const createEngine = (
                   }),
                 },
                 onDone: {
-                  target: 'checkNextStep',
+                  target: 'loadingNextStep',
                 },
               },
             },
-            checkNextStep: {
+            loadingNextStep: {
               on: {
                 always: [
                   { target: 'running', cond: hasStepToRun },
@@ -101,7 +101,7 @@ export const createEngine = (
                   target: 'failure',
                 },
                 onDone: {
-                  target: 'checkNextStep',
+                  target: 'loadingNextStep',
                 },
               },
             },
