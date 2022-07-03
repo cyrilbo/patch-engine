@@ -1,14 +1,11 @@
-import { createMachine } from 'xstate';
+import { createMachine, assign } from 'xstate';
 import { Plugin } from './Plugin/Plugin.impl';
 
 const hasPluginToRun = ({ pluginsList }: { pluginsList: string[] }) =>
   pluginsList.length > 0;
+
 const doesNotHavePluginToRun = ({ pluginsList }: { pluginsList: string[] }) => {
   return pluginsList.length <= 0;
-};
-
-const preRun = async () => {
-  console.log('pre run');
 };
 
 const runStep = async () => {
@@ -42,7 +39,17 @@ const pluginExecutionValid = (context: {
   return !context.currentPluginError;
 };
 
-export const createEngine = (plugins: Plugin[]) => {
+const fallback = async () => {
+  return true;
+};
+
+export const createEngine = (
+  plugins: Plugin[],
+  options?: {
+    onPrePluginRun?: () => Promise<boolean>;
+  },
+) => {
+  const onPrePluginRun = options?.onPrePluginRun ?? fallback;
   const pluginsList = plugins.map((plugin) => plugin.id);
   return createMachine(
     {
@@ -55,12 +62,10 @@ export const createEngine = (plugins: Plugin[]) => {
       },
       states: {
         init: {
-          on: {
-            always: [
-              { target: 'runPlugin', cond: hasPluginToRun },
-              { target: 'end', cond: doesNotHavePluginToRun },
-            ],
-          },
+          always: [
+            { target: 'runPlugin', cond: hasPluginToRun },
+            { target: 'end', cond: doesNotHavePluginToRun },
+          ],
         },
         runPlugin: {
           type: 'compound',
@@ -69,9 +74,12 @@ export const createEngine = (plugins: Plugin[]) => {
             preRun: {
               invoke: {
                 id: 'preRun',
-                src: preRun,
+                src: onPrePluginRun,
                 onError: {
                   target: 'failure',
+                  actions: assign({
+                    currentPluginError: (_, event) => event.data,
+                  }),
                 },
                 onDone: {
                   target: 'checkNextStep',
