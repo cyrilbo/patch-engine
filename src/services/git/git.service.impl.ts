@@ -1,5 +1,5 @@
-import { IGitService } from './git.service.interface';
 import { $, chalk } from 'zx';
+import { IGitService } from './git.service.interface';
 
 const checkIsGitRepositoryClean = async () => {
   const gitDiff = await $`git diff HEAD`;
@@ -10,8 +10,8 @@ const checkIsGitRepositoryClean = async () => {
         'Your repository is dirty, please commit your changes before continuing.',
       ),
     );
+    throw new Error('Dirty git repository');
   }
-  return isGitDirectoryClean;
 };
 
 const commitChanges = async (commitMessage: string) => {

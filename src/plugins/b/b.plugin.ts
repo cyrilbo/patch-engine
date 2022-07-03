@@ -1,6 +1,6 @@
 import { $ } from 'zx';
-import { Plugin } from '../../engine/types/Plugin';
-import { Step } from '../../engine/types/Step';
+import { Plugin } from '../../engine/Plugin/Plugin.type';
+import { Step } from '../../engine/Plugin/Step.type';
 
 const firstStep: Step = {
   name: 'first step of plugin b',
@@ -12,9 +12,10 @@ const firstStep: Step = {
     return true;
   },
 };
-export const bPlugin = new Plugin({
+export const bPlugin: Plugin = {
   id: 'plugin-b',
   displayName: 'Plugin b',
   version: '1',
   steps: [firstStep],
-});
+  dependencies: [],
+};

@@ -1,5 +1,5 @@
 import { chalk } from 'zx';
-import { Step } from './Step';
+import { Step } from './Step.type';
 
 export const printStepIsRunning = (step: Step, index: number) => {
   console.log(
