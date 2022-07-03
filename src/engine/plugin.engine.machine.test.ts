@@ -45,4 +45,18 @@ describe('PluginEngine', () => {
       })
       .start();
   });
+
+  it('should remove the plugin from the list once it has been run', (done) => {
+    const pluginMock = createPluginMock();
+    const engine = createEngine([pluginMock]);
+    expect(engine.initialState.context.pluginsList).toEqual([pluginMock.id]);
+    interpret(engine)
+      .onTransition((state) => {
+        if (state.matches('end')) {
+          expect(state.context.pluginsList).toEqual([]);
+          done();
+        }
+      })
+      .start();
+  });
 });

@@ -8,17 +8,8 @@ const runStep = async () => {
   console.log('run step');
 };
 
-const getCurrentPlugin = (id: string) => {
-  console.log(id);
-  return true;
-};
-
-const hasStepToRun = ({
-  currentPluginId,
-}: {
-  currentPluginId: string | undefined;
-}) => {
-  return !!currentPluginId && getCurrentPlugin(currentPluginId);
+const hasStepToRun = () => {
+  return false;
 };
 
 const pluginExecutionValid = (context: {
@@ -87,12 +78,10 @@ export const createEngine = (
               },
             },
             loadingNextStep: {
-              on: {
-                always: [
-                  { target: 'runningStep', cond: hasStepToRun },
-                  { target: 'success' },
-                ],
-              },
+              always: [
+                { target: 'runningStep', cond: hasStepToRun },
+                { target: 'success' },
+              ],
             },
             runningStep: {
               invoke: {
@@ -108,6 +97,9 @@ export const createEngine = (
             },
             success: {
               type: 'final',
+              entry: assign<MachineContext>({
+                pluginsList: (context) => context.pluginsList.slice(1),
+              }),
             },
             failure: {
               type: 'final',
