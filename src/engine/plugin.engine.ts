@@ -12,10 +12,12 @@ const run = async (plugins: Plugin[]) => {
   const sortedPlugins = sortPlugins(plugins);
   printPluginListToApply(sortedPlugins);
 
+  const failureState = EngineIO.retrieveFailureState();
+
   const engine = createEngine(sortedPlugins, {
     onPrePluginRun: GitService.checkIsGitRepositoryClean,
   });
-  const actor = interpret(engine).start();
+  const actor = interpret(engine).start(failureState);
 
   const finalState = await waitFor(actor, (state) =>
     state.matches(['failure'] || state.matches(['end'])),
