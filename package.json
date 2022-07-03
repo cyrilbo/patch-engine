@@ -13,9 +13,8 @@
     "test": "yarn test:lint && yarn test:types && yarn test:unit",
     "test:lint": "eslint . --max-warnings=0",
     "test:types": "tsc --noEmit",
-    "test:unit": "jest",
-    "vtest": "vitest",
-    "vcoverage": "vitest run --coverage"
+    "test:unit": "vitest",
+    "coverage": "vitest run --coverage"
   },
   "devDependencies": {
     "@types/jest": "^28.1.4",
