@@ -37,11 +37,13 @@ export type MachineContext = {
   currentPluginError: string | undefined;
 };
 
+export type CreateEngineOptions = {
+  onPrePluginRun?: () => Promise<void>;
+};
+
 export const createEngine = (
   plugins: Plugin[],
-  options?: {
-    onPrePluginRun?: () => Promise<void>;
-  },
+  options?: CreateEngineOptions,
 ) => {
   const onPrePluginRun = options?.onPrePluginRun ?? fallback;
   const getPluginById = (id: string) => {

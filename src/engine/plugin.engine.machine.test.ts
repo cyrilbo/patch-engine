@@ -1,17 +1,40 @@
 import { interpret } from 'xstate';
-import { createEngine, MachineContext } from './plugin.engine.machine';
+import {
+  createEngine,
+  CreateEngineOptions,
+  MachineContext,
+} from './plugin.engine.machine';
 import { createPluginMock, createStepMock } from './Plugin/Plugin.mock';
 import { vi } from 'vitest';
+import { Plugin } from './Plugin/Plugin.type';
+
+const createTestEngine = (plugins: Plugin[], options?: CreateEngineOptions) =>
+  createEngine(plugins, options).withConfig({
+    actions: {
+      printPluginBeeingApplied: () => {
+        //noop
+      },
+      printStepIsRunning: () => {
+        //noop
+      },
+      printStepFailed: () => {
+        //noop
+      },
+      printStepSucceeded: () => {
+        //noop
+      },
+    },
+  });
 
 describe('PluginEngine', () => {
   it('should end if no plugins are passed', () => {
-    const engine = createEngine([]);
+    const engine = createTestEngine([]);
     const initState = engine.initialState;
     expect(initState.matches('end')).toBeTruthy();
   });
   it('should run a plugin when a plugin is passed', () => {
     const pluginMock = createPluginMock();
-    const engine = createEngine([pluginMock]);
+    const engine = createTestEngine([pluginMock]);
     expect(engine.initialState.matches('runningPlugin')).toBeTruthy();
   });
   it('should fail if prePluginRun hook fails', () =>
@@ -20,7 +43,7 @@ describe('PluginEngine', () => {
       const onPrePluginRunMock = vi
         .fn()
         .mockRejectedValue('Dirty Git Repository');
-      const engine = createEngine([pluginMock], {
+      const engine = createTestEngine([pluginMock], {
         onPrePluginRun: onPrePluginRunMock,
       });
       interpret(engine)
@@ -38,10 +61,9 @@ describe('PluginEngine', () => {
   it('should set currentPluginId when running the plugin', () =>
     new Promise<void>((done) => {
       const pluginMock = createPluginMock();
-      const engine = createEngine([pluginMock]);
+      const engine = createTestEngine([pluginMock]);
       interpret(engine)
         .onTransition((state) => {
-          console.log(state.value, state.context);
           if (state.matches('runningPlugin')) {
             expect(state.context.currentPluginId).toEqual(pluginMock.id);
             done();
@@ -53,7 +75,7 @@ describe('PluginEngine', () => {
   it('should remove the plugin from the list once it has been run', () =>
     new Promise<void>((done) => {
       const pluginMock = createPluginMock();
-      const engine = createEngine([pluginMock]);
+      const engine = createTestEngine([pluginMock]);
       expect(engine.initialState.context.pluginsList).toEqual([pluginMock.id]);
       interpret(engine)
         .onTransition((state) => {
@@ -68,7 +90,7 @@ describe('PluginEngine', () => {
   it('should track the running step for the current plugin', () =>
     new Promise<void>((done) => {
       const pluginMock = createPluginMock();
-      const engine = createEngine([pluginMock]);
+      const engine = createTestEngine([pluginMock]);
       expect(engine.initialState.context.pluginsList).toEqual([pluginMock.id]);
       interpret(engine)
         .onTransition((state) => {
@@ -101,7 +123,7 @@ describe('PluginEngine', () => {
       const stepMock = createStepMock({ run: stepRunMock });
       const pluginMock = createPluginMock({ steps: [stepMock] });
 
-      const engine = createEngine([pluginMock]);
+      const engine = createTestEngine([pluginMock]);
       interpret(engine)
         .onTransition((state) => {
           if (state.matches('end')) {
@@ -118,7 +140,7 @@ describe('PluginEngine', () => {
       const stepMock = createStepMock({ run: stepRunMock });
       const pluginMock = createPluginMock({ steps: [stepMock] });
 
-      const engine = createEngine([pluginMock]);
+      const engine = createTestEngine([pluginMock]);
       interpret(engine)
         .onTransition((state) => {
           if (state.matches('failure')) {
@@ -144,7 +166,7 @@ describe('PluginEngine', () => {
       const step2Mock = createStepMock({ run: step2RunMock });
       const pluginMock = createPluginMock({ steps: [step1Mock, step2Mock] });
 
-      const engine = createEngine([pluginMock]);
+      const engine = createTestEngine([pluginMock]);
       interpret(engine)
         .onTransition((state) => {
           if (state.matches('end')) {
@@ -174,7 +196,7 @@ describe('PluginEngine', () => {
         id: 'plugin-mock-id-2',
         steps: [step4Mock],
       });
-      const engine = createEngine([plugin1Mock, plugin2Mock]);
+      const engine = createTestEngine([plugin1Mock, plugin2Mock]);
       interpret(engine)
         .onTransition((state) => {
           if (state.matches('failure')) {
@@ -211,7 +233,7 @@ describe('PluginEngine', () => {
         steps: [step2Mock],
       });
 
-      const engine = createEngine([plugin1Mock, plugin2Mock]);
+      const engine = createTestEngine([plugin1Mock, plugin2Mock]);
       interpret(engine)
         .onTransition((state) => {
           if (state.matches('end')) {
