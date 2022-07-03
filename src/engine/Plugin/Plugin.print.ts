@@ -10,7 +10,7 @@ export const printStepIsRunning = (step: Step, index: number) => {
 };
 
 export const printStepFailed = () => {
-  console.log(chalk.red(' --> ') + chalk.bgRed(' --> Failure ❌'));
+  console.log(chalk.red(' --> ') + chalk.bgRed('Failure ❌'));
   console.log();
 };
 
