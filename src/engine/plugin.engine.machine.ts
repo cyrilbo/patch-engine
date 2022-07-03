@@ -54,14 +54,14 @@ export const createEngine = (
   return createMachine(
     {
       id: 'engine',
-      initial: 'init',
+      initial: 'loadingNextPlugin',
       context: {
         pluginsList,
         currentPluginId: undefined,
         currentPluginError: undefined,
       },
       states: {
-        init: {
+        loadingNextPlugin: {
           always: [
             { target: 'runPlugin', cond: hasPluginToRun },
             { target: 'end', cond: doesNotHavePluginToRun },
@@ -115,7 +115,7 @@ export const createEngine = (
           },
           onDone: [
             {
-              target: 'end',
+              target: 'loadingNextPlugin',
               cond: pluginExecutionValid,
             },
             // If the condition is false, validation failed, so go to invalid
