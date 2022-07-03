@@ -4,10 +4,6 @@ import { Plugin } from './Plugin/Plugin.impl';
 const hasPluginToRun = ({ pluginsList }: { pluginsList: string[] }) =>
   pluginsList.length > 0;
 
-const doesNotHavePluginToRun = ({ pluginsList }: { pluginsList: string[] }) => {
-  return pluginsList.length <= 0;
-};
-
 const runStep = async () => {
   console.log('run step');
 };
@@ -63,8 +59,11 @@ export const createEngine = (
       states: {
         loadingNextPlugin: {
           always: [
-            { target: 'runningPlugin', cond: hasPluginToRun },
-            { target: 'end', cond: doesNotHavePluginToRun },
+            {
+              target: 'runningPlugin',
+              cond: hasPluginToRun,
+            },
+            { target: 'end' },
           ],
         },
         runningPlugin: {
