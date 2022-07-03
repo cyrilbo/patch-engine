@@ -8,8 +8,17 @@ const runStep = async () => {
   console.log('run step');
 };
 
-const hasStepToRun = () => {
-  return false;
+const hasStepToRun = (
+  context: MachineContext,
+  getPluginById: (id: string) => Plugin,
+) => {
+  const plugin = getPluginById(context.currentPluginId);
+  if (plugin.steps.length <= 0) {
+    return false;
+  }
+  if (context.currentPluginStepIndex === undefined) return true;
+  if (context.currentPluginStepIndex >= plugin.steps.length - 1) return false;
+  return true;
 };
 
 const pluginExecutionValid = (context: {
@@ -22,9 +31,10 @@ const fallback = async () => {
   return Promise.resolve(true);
 };
 
-type MachineContext = {
+export type MachineContext = {
   pluginsList: string[];
   currentPluginId: string | undefined;
+  currentPluginStepIndex: number | undefined;
   currentPluginError: string | undefined;
 };
 
@@ -35,6 +45,12 @@ export const createEngine = (
   },
 ) => {
   const onPrePluginRun = options?.onPrePluginRun ?? fallback;
+  const getPluginById = (id: string) => {
+    const plugin = plugins.find((p) => p.id === id);
+    if (plugin) return plugin;
+    throw new Error(`Plugin ${id} not found`);
+  };
+
   const pluginsList = plugins.map((plugin) => plugin.id);
   return createMachine(
     {
@@ -43,6 +59,7 @@ export const createEngine = (
       context: {
         pluginsList,
         currentPluginId: undefined,
+        currentPluginStepIndex: undefined,
         currentPluginError: undefined,
       },
       states: {
@@ -79,7 +96,16 @@ export const createEngine = (
             },
             loadingNextStep: {
               always: [
-                { target: 'runningStep', cond: hasStepToRun },
+                {
+                  target: 'runningStep',
+                  cond: (context) => hasStepToRun(context, getPluginById),
+                  actions: assign<MachineContext>({
+                    currentPluginStepIndex: (context) =>
+                      context.currentPluginStepIndex === undefined
+                        ? 0
+                        : context.currentPluginStepIndex + 1,
+                  }),
+                },
                 { target: 'success' },
               ],
             },
@@ -99,6 +125,8 @@ export const createEngine = (
               type: 'final',
               entry: assign<MachineContext>({
                 pluginsList: (context) => context.pluginsList.slice(1),
+                currentPluginId: undefined,
+                currentPluginStepIndex: undefined,
               }),
             },
             failure: {

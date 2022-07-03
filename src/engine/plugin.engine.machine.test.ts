@@ -1,5 +1,5 @@
 import { interpret } from 'xstate';
-import { createEngine } from './plugin.engine.machine';
+import { createEngine, MachineContext } from './plugin.engine.machine';
 import { createPluginMock } from './Plugin/Plugin.mock';
 
 describe('PluginEngine', () => {
@@ -54,6 +54,34 @@ describe('PluginEngine', () => {
       .onTransition((state) => {
         if (state.matches('end')) {
           expect(state.context.pluginsList).toEqual([]);
+          done();
+        }
+      })
+      .start();
+  });
+  it('should track the running step for the current plugin', (done) => {
+    const pluginMock = createPluginMock();
+    const engine = createEngine([pluginMock]);
+    expect(engine.initialState.context.pluginsList).toEqual([pluginMock.id]);
+    interpret(engine)
+      .onTransition((state) => {
+        if (state.matches('runningPlugin.runningStep')) {
+          const expectedContext: MachineContext = {
+            pluginsList: [pluginMock.id],
+            currentPluginId: pluginMock.id,
+            currentPluginStepIndex: 0,
+            currentPluginError: undefined,
+          };
+          expect(state.context).toEqual(expectedContext);
+        }
+        if (state.matches('end')) {
+          const expectedContext: MachineContext = {
+            pluginsList: [],
+            currentPluginId: undefined,
+            currentPluginStepIndex: undefined,
+            currentPluginError: undefined,
+          };
+          expect(state.context).toEqual(expectedContext);
           done();
         }
       })
