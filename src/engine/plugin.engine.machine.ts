@@ -143,7 +143,14 @@ export const createEngine = (
             },
             failure: {
               entry: 'printStepFailed',
-              type: 'final',
+              on: {
+                ERROR_MANUALLY_HANDLED: {
+                  target: 'loadingNextStep',
+                  actions: assign({
+                    currentPluginError: undefined,
+                  }),
+                },
+              },
             },
           },
           onDone: [

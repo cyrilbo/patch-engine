@@ -11,18 +11,10 @@ import { Plugin } from './Plugin/Plugin.type';
 const createTestEngine = (plugins: Plugin[], options?: CreateEngineOptions) =>
   createEngine(plugins, options).withConfig({
     actions: {
-      printPluginBeeingApplied: () => {
-        //noop
-      },
-      printStepIsRunning: () => {
-        //noop
-      },
-      printStepFailed: () => {
-        //noop
-      },
-      printStepSucceeded: () => {
-        //noop
-      },
+      printPluginBeeingApplied: () => {},
+      printStepIsRunning: () => {},
+      printStepFailed: () => {},
+      printStepSucceeded: () => {},
     },
   });
 
@@ -48,7 +40,7 @@ describe('PluginEngine', () => {
       });
       interpret(engine)
         .onTransition((state) => {
-          if (state.matches('failure')) {
+          if (state.matches('runningPlugin.failure')) {
             expect(state.context.currentPluginError).toEqual(
               'Dirty Git Repository',
             );
@@ -143,7 +135,7 @@ describe('PluginEngine', () => {
       const engine = createTestEngine([pluginMock]);
       interpret(engine)
         .onTransition((state) => {
-          if (state.matches('failure')) {
+          if (state.matches('runningPlugin.failure')) {
             expect(stepRunMock).toHaveBeenCalledTimes(1);
             const expectedContext: MachineContext = {
               pluginsList: [pluginMock.id],
@@ -199,7 +191,7 @@ describe('PluginEngine', () => {
       const engine = createTestEngine([plugin1Mock, plugin2Mock]);
       interpret(engine)
         .onTransition((state) => {
-          if (state.matches('failure')) {
+          if (state.matches('runningPlugin.failure')) {
             expect(step1RunMock).toHaveBeenCalledTimes(1);
             expect(step2RunMock).toHaveBeenCalledTimes(1);
             expect(step3RunMock).not.toHaveBeenCalled();

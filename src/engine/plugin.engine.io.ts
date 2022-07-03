@@ -15,7 +15,14 @@ const retrieveFailureState = (): State<MachineContext> | undefined => {
   }
 };
 
+const clearFailureState = () => {
+  if (fs.existsSync('.plugin-engine/failure-state.json')) {
+    fs.unlinkSync('.plugin-engine/failure-state.json');
+  }
+};
+
 export const EngineIO = {
   persistFailureState,
   retrieveFailureState,
+  clearFailureState,
 };
