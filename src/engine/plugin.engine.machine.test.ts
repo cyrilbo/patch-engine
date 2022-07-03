@@ -88,7 +88,7 @@ describe('PluginEngine', () => {
       .start();
   });
 
-  it('should run plugin steps', (done) => {
+  it('should run plugin one plugin step', (done) => {
     const stepRunMock = jest.fn();
     const stepMock = createStepMock({ run: stepRunMock });
     const pluginMock = createPluginMock({ steps: [stepMock] });
@@ -111,7 +111,6 @@ describe('PluginEngine', () => {
     const engine = createEngine([pluginMock]);
     interpret(engine)
       .onTransition((state) => {
-        console.log(state.value);
         if (state.matches('failure')) {
           expect(stepRunMock).toHaveBeenCalledTimes(1);
           const expectedContext: MachineContext = {
@@ -121,6 +120,90 @@ describe('PluginEngine', () => {
             currentPluginError: 'Oops, an error occured',
           };
           expect(state.context).toEqual(expectedContext);
+          done();
+        }
+      })
+      .start();
+  });
+
+  it('should run multiple plugin steps', (done) => {
+    const step1RunMock = jest.fn();
+    const step1Mock = createStepMock({ run: step1RunMock });
+    const step2RunMock = jest.fn();
+    const step2Mock = createStepMock({ run: step2RunMock });
+    const pluginMock = createPluginMock({ steps: [step1Mock, step2Mock] });
+
+    const engine = createEngine([pluginMock]);
+    interpret(engine)
+      .onTransition((state) => {
+        if (state.matches('end')) {
+          expect(step1RunMock).toHaveBeenCalledTimes(1);
+          expect(step2RunMock).toHaveBeenCalledTimes(1);
+          done();
+        }
+      })
+      .start();
+  });
+
+  it.only('should not run all steps and plugins if one step has failed', (done) => {
+    const step1RunMock = jest.fn();
+    const step1Mock = createStepMock({ run: step1RunMock });
+    const step2RunMock = jest.fn().mockRejectedValue('Oops, an error occured');
+    const step2Mock = createStepMock({ run: step2RunMock });
+    const step3RunMock = jest.fn();
+    const step3Mock = createStepMock({ run: step3RunMock });
+    const step4RunMock = jest.fn();
+    const step4Mock = createStepMock({ run: step4RunMock });
+    const plugin1Mock = createPluginMock({
+      id: 'plugin-mock-id-1',
+      steps: [step1Mock, step2Mock, step3Mock],
+    });
+    const plugin2Mock = createPluginMock({
+      id: 'plugin-mock-id-2',
+      steps: [step4Mock],
+    });
+    const engine = createEngine([plugin1Mock, plugin2Mock]);
+    interpret(engine)
+      .onTransition((state) => {
+        if (state.matches('failure')) {
+          expect(step1RunMock).toHaveBeenCalledTimes(1);
+          expect(step2RunMock).toHaveBeenCalledTimes(1);
+          expect(step3RunMock).not.toHaveBeenCalled();
+          expect(step4RunMock).not.toHaveBeenCalled();
+          const expectedContext: MachineContext = {
+            pluginsList: [plugin1Mock.id, plugin2Mock.id],
+            currentPluginId: plugin1Mock.id,
+            currentPluginStepIndex: 1,
+            currentPluginError: 'Oops, an error occured',
+          };
+          expect(state.context).toEqual(expectedContext);
+          done();
+        }
+      })
+      .start();
+  });
+
+  it('should run multiple plugins', (done) => {
+    const step1RunMock = jest.fn();
+    const step1Mock = createStepMock({ run: step1RunMock });
+    const plugin1Mock = createPluginMock({
+      id: 'plugin-mock-id-1',
+      steps: [step1Mock],
+    });
+    const step2RunMock = jest.fn();
+
+    const step2Mock = createStepMock({ run: step2RunMock });
+    const plugin2Mock = createPluginMock({
+      id: 'plugin-mock-id-2',
+      steps: [step2Mock],
+    });
+
+    const engine = createEngine([plugin1Mock, plugin2Mock]);
+    interpret(engine)
+      .onTransition((state) => {
+        if (state.matches('end')) {
+          expect(step1RunMock).toHaveBeenCalledTimes(1);
+          expect(step2RunMock).toHaveBeenCalledTimes(1);
           done();
         }
       })
