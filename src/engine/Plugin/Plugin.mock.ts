@@ -9,6 +9,10 @@ const stepMock: Step = {
   },
 };
 
+export const createStepMock = (params?: Partial<Step>) => {
+  return { ...stepMock, ...params };
+};
+
 export const pluginMock: IPlugin = {
   id: 'plugin-mock-id',
   displayName: 'Plugin mock',

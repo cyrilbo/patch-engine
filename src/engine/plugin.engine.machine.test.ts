@@ -1,6 +1,6 @@
 import { interpret } from 'xstate';
 import { createEngine, MachineContext } from './plugin.engine.machine';
-import { createPluginMock } from './Plugin/Plugin.mock';
+import { createPluginMock, createStepMock } from './Plugin/Plugin.mock';
 
 describe('PluginEngine', () => {
   it('should end if no plugins are passed', () => {
@@ -80,6 +80,45 @@ describe('PluginEngine', () => {
             currentPluginId: undefined,
             currentPluginStepIndex: undefined,
             currentPluginError: undefined,
+          };
+          expect(state.context).toEqual(expectedContext);
+          done();
+        }
+      })
+      .start();
+  });
+
+  it('should run plugin steps', (done) => {
+    const stepRunMock = jest.fn();
+    const stepMock = createStepMock({ run: stepRunMock });
+    const pluginMock = createPluginMock({ steps: [stepMock] });
+
+    const engine = createEngine([pluginMock]);
+    interpret(engine)
+      .onTransition((state) => {
+        if (state.matches('end')) {
+          expect(stepRunMock).toHaveBeenCalledTimes(1);
+          done();
+        }
+      })
+      .start();
+  });
+  it("should stop if a plugin's step fails", (done) => {
+    const stepRunMock = jest.fn().mockRejectedValue('Oops, an error occured');
+    const stepMock = createStepMock({ run: stepRunMock });
+    const pluginMock = createPluginMock({ steps: [stepMock] });
+
+    const engine = createEngine([pluginMock]);
+    interpret(engine)
+      .onTransition((state) => {
+        console.log(state.value);
+        if (state.matches('failure')) {
+          expect(stepRunMock).toHaveBeenCalledTimes(1);
+          const expectedContext: MachineContext = {
+            pluginsList: [pluginMock.id],
+            currentPluginId: pluginMock.id,
+            currentPluginStepIndex: 0,
+            currentPluginError: 'Oops, an error occured',
           };
           expect(state.context).toEqual(expectedContext);
           done();

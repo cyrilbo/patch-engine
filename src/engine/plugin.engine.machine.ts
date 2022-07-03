@@ -4,10 +4,6 @@ import { Plugin } from './Plugin/Plugin.impl';
 const hasPluginToRun = ({ pluginsList }: { pluginsList: string[] }) =>
   pluginsList.length > 0;
 
-const runStep = async () => {
-  console.log('run step');
-};
-
 const hasStepToRun = (
   context: MachineContext,
   getPluginById: (id: string) => Plugin,
@@ -112,9 +108,15 @@ export const createEngine = (
             runningStep: {
               invoke: {
                 id: 'runningStep',
-                src: runStep,
+                src: async (context) => {
+                  const plugin = getPluginById(context.currentPluginId);
+                  await plugin.steps[context.currentPluginStepIndex].run();
+                },
                 onError: {
                   target: 'failure',
+                  actions: assign({
+                    currentPluginError: (_, event) => event.data,
+                  }),
                 },
                 onDone: {
                   target: 'loadingNextStep',
