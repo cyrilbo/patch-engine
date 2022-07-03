@@ -21,14 +21,6 @@ const hasStepToRun = ({
   return !!currentPluginId && getCurrentPlugin(currentPluginId);
 };
 
-const doesNotHaveStepToRun = ({
-  currentPluginId,
-}: {
-  currentPluginId: string | undefined;
-}) => {
-  return !currentPluginId || !getCurrentPlugin(currentPluginId);
-};
-
 const pluginExecutionValid = (context: {
   currentPluginError: string | undefined;
 }) => {
@@ -89,7 +81,7 @@ export const createEngine = (
               on: {
                 always: [
                   { target: 'runningStep', cond: hasStepToRun },
-                  { target: 'success', cond: doesNotHaveStepToRun },
+                  { target: 'success' },
                 ],
               },
             },
