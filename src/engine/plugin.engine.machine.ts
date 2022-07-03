@@ -1,5 +1,8 @@
+import { printStepFailed, printStepSucceeded } from './Plugin/Plugin.print';
+import { printPluginBeeingApplied } from './plugin.engine.print';
 import { createMachine, assign } from 'xstate';
-import { Plugin } from './Plugin/Plugin.impl';
+import { Plugin } from './Plugin/Plugin.type';
+import { printStepIsRunning } from './Plugin/Plugin.print';
 
 const hasPluginToRun = ({ pluginsList }: { pluginsList: string[] }) =>
   pluginsList.length > 0;
@@ -37,7 +40,7 @@ export type MachineContext = {
 export const createEngine = (
   plugins: Plugin[],
   options?: {
-    onPrePluginRun?: () => Promise<boolean>;
+    onPrePluginRun?: () => Promise<void>;
   },
 ) => {
   const onPrePluginRun = options?.onPrePluginRun ?? fallback;
@@ -48,104 +51,127 @@ export const createEngine = (
   };
 
   const pluginsList = plugins.map((plugin) => plugin.id);
-  return createMachine({
-    id: 'engine',
-    initial: 'loadingNextPlugin',
-    context: {
-      pluginsList,
-      currentPluginId: undefined,
-      currentPluginStepIndex: undefined,
-      currentPluginError: undefined,
-    },
-    states: {
-      loadingNextPlugin: {
-        always: [
-          {
-            target: 'runningPlugin',
-            cond: hasPluginToRun,
-            actions: assign<MachineContext>({
-              currentPluginId: (context) => context.pluginsList[0],
-            }),
-          },
-          { target: 'end' },
-        ],
+  return createMachine(
+    {
+      id: 'engine',
+      initial: 'loadingNextPlugin',
+      context: {
+        pluginsList,
+        currentPluginId: undefined,
+        currentPluginStepIndex: undefined,
+        currentPluginError: undefined,
       },
-      runningPlugin: {
-        type: 'compound',
-        initial: 'preRun',
-        states: {
-          preRun: {
-            invoke: {
-              id: 'preRun',
-              src: onPrePluginRun,
-              onError: {
-                target: 'failure',
-                actions: assign({
-                  currentPluginError: (_, event) => event.data,
+      states: {
+        loadingNextPlugin: {
+          always: [
+            {
+              target: 'runningPlugin',
+              cond: hasPluginToRun,
+              actions: [
+                assign<MachineContext>({
+                  currentPluginId: (context) => context.pluginsList[0],
                 }),
-              },
-              onDone: {
-                target: 'loadingNextStep',
-              },
+                'printPluginBeeingApplied',
+              ],
             },
-          },
-          loadingNextStep: {
-            always: [
-              {
-                target: 'runningStep',
-                cond: (context) => hasStepToRun(context, getPluginById),
-                actions: assign<MachineContext>({
-                  currentPluginStepIndex: (context) =>
-                    context.currentPluginStepIndex === undefined
-                      ? 0
-                      : context.currentPluginStepIndex + 1,
-                }),
-              },
-              { target: 'success' },
-            ],
-          },
-          runningStep: {
-            invoke: {
-              id: 'runningStep',
-              src: async (context) => {
-                const plugin = getPluginById(context.currentPluginId);
-                await plugin.steps[context.currentPluginStepIndex].run();
-              },
-              onError: {
-                target: 'failure',
-                actions: assign({
-                  currentPluginError: (_, event) => event.data,
-                }),
-              },
-              onDone: {
-                target: 'loadingNextStep',
-              },
-            },
-          },
-          success: {
-            type: 'final',
-            entry: assign<MachineContext>({
-              pluginsList: (context) => context.pluginsList.slice(1),
-              currentPluginId: undefined,
-              currentPluginStepIndex: undefined,
-            }),
-          },
-          failure: {
-            type: 'final',
-          },
+            { target: 'end' },
+          ],
         },
-        onDone: [
-          {
-            target: 'loadingNextPlugin',
-            cond: pluginExecutionValid,
+        runningPlugin: {
+          type: 'compound',
+          initial: 'preRun',
+          states: {
+            preRun: {
+              invoke: {
+                id: 'preRun',
+                src: onPrePluginRun,
+                onError: {
+                  target: 'failure',
+                  actions: assign({
+                    currentPluginError: (_, event) => event.data,
+                  }),
+                },
+                onDone: {
+                  target: 'loadingNextStep',
+                },
+              },
+            },
+            loadingNextStep: {
+              always: [
+                {
+                  target: 'runningStep',
+                  cond: (context) => hasStepToRun(context, getPluginById),
+                  actions: assign<MachineContext>({
+                    currentPluginStepIndex: (context) =>
+                      context.currentPluginStepIndex === undefined
+                        ? 0
+                        : context.currentPluginStepIndex + 1,
+                  }),
+                },
+                { target: 'success' },
+              ],
+            },
+            runningStep: {
+              entry: ['printStepIsRunning'],
+              invoke: {
+                id: 'runningStep',
+                src: async (context) => {
+                  const plugin = getPluginById(context.currentPluginId);
+                  await plugin.steps[context.currentPluginStepIndex].run();
+                },
+                onError: {
+                  target: 'failure',
+                  actions: assign({
+                    currentPluginError: (_, event) => event.data,
+                  }),
+                },
+                onDone: {
+                  target: 'loadingNextStep',
+                  actions: 'printStepSucceeded',
+                },
+              },
+            },
+            success: {
+              type: 'final',
+              entry: assign<MachineContext>({
+                pluginsList: (context) => context.pluginsList.slice(1),
+                currentPluginId: undefined,
+                currentPluginStepIndex: undefined,
+              }),
+            },
+            failure: {
+              entry: 'printStepFailed',
+              type: 'final',
+            },
           },
-          {
-            target: 'failure',
-          },
-        ],
+          onDone: [
+            {
+              target: 'loadingNextPlugin',
+              cond: pluginExecutionValid,
+            },
+            {
+              target: 'failure',
+            },
+          ],
+        },
+        failure: {},
+        end: {},
       },
-      failure: {},
-      end: {},
     },
-  });
+    {
+      actions: {
+        printPluginBeeingApplied: (context) => {
+          const plugin = getPluginById(context.currentPluginId);
+          printPluginBeeingApplied(plugin);
+        },
+        printStepIsRunning: (context) => {
+          const plugin = getPluginById(context.currentPluginId);
+          const step = plugin.steps[context.currentPluginStepIndex];
+          printStepIsRunning(step, context.currentPluginStepIndex);
+        },
+        printStepFailed,
+        printStepSucceeded,
+      },
+    },
+  );
 };

@@ -1,4 +1,4 @@
-import { Plugin } from '../../Plugin/Plugin.impl';
+import { Plugin } from '../../Plugin/Plugin.type';
 
 export const adaptPluginsToDependencyList = (
   plugins: Plugin[],

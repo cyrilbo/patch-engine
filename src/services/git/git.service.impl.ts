@@ -10,8 +10,8 @@ const checkIsGitRepositoryClean = async () => {
         'Your repository is dirty, please commit your changes before continuing.',
       ),
     );
+    throw new Error('Dirty git repository');
   }
-  return isGitDirectoryClean;
 };
 
 const commitChanges = async (commitMessage: string) => {

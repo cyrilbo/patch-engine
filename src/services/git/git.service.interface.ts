@@ -1,4 +1,4 @@
 export interface IGitService {
-  checkIsGitRepositoryClean: () => Promise<boolean>;
+  checkIsGitRepositoryClean: () => Promise<void>;
   commitChanges: (commitMessage: string) => Promise<boolean>;
 }

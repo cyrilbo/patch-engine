@@ -1,4 +1,4 @@
-import { IPlugin } from './Plugin.interface';
+import { Plugin } from './Plugin.type';
 import { Step } from './Step.type';
 
 const stepMock: Step = {
@@ -13,15 +13,14 @@ export const createStepMock = (params?: Partial<Step>) => {
   return { ...stepMock, ...params };
 };
 
-export const pluginMock: IPlugin = {
+export const pluginMock: Plugin = {
   id: 'plugin-mock-id',
   displayName: 'Plugin mock',
   version: '1',
   steps: [stepMock],
   dependencies: [],
-  run: async () => true,
 };
 
-export const createPluginMock = (params?: Partial<IPlugin>) => {
+export const createPluginMock = (params?: Partial<Plugin>) => {
   return { ...pluginMock, ...params };
 };
