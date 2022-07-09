@@ -26,10 +26,6 @@ const pluginExecutionValid = (context: {
   return !context.currentPluginError;
 };
 
-const fallback = async () => {
-  return Promise.resolve(true);
-};
-
 export type MachineContext = {
   pluginsList: string[];
   currentPluginId: string | undefined;
@@ -37,15 +33,7 @@ export type MachineContext = {
   currentPluginError: string | undefined;
 };
 
-export type CreateEngineOptions = {
-  onPrePluginRun?: () => Promise<void>;
-};
-
-export const createEngine = (
-  plugins: Plugin[],
-  options?: CreateEngineOptions,
-) => {
-  const onPrePluginRun = options?.onPrePluginRun ?? fallback;
+export const createEngine = (plugins: Plugin[]) => {
   const getPluginById = (id: string) => {
     const plugin = plugins.find((p) => p.id === id);
     if (plugin) return plugin;
@@ -81,23 +69,8 @@ export const createEngine = (
         },
         runningPlugin: {
           type: 'compound',
-          initial: 'preRun',
+          initial: 'loadingNextStep',
           states: {
-            preRun: {
-              invoke: {
-                id: 'preRun',
-                src: onPrePluginRun,
-                onError: {
-                  target: 'failure',
-                  actions: assign({
-                    currentPluginError: (_, event) => event.data,
-                  }),
-                },
-                onDone: {
-                  target: 'loadingNextStep',
-                },
-              },
-            },
             loadingNextStep: {
               always: [
                 {
@@ -114,12 +87,13 @@ export const createEngine = (
               ],
             },
             runningStep: {
-              entry: ['printStepIsRunning'],
               invoke: {
                 id: 'runningStep',
                 src: async (context) => {
                   const plugin = getPluginById(context.currentPluginId);
-                  await plugin.steps[context.currentPluginStepIndex].run();
+                  const step = plugin.steps[context.currentPluginStepIndex];
+                  printStepIsRunning(step, context.currentPluginStepIndex);
+                  await step.run();
                 },
                 onError: {
                   target: 'failure',
@@ -143,7 +117,14 @@ export const createEngine = (
             },
             failure: {
               entry: 'printStepFailed',
-              type: 'final',
+              on: {
+                ERROR_MANUALLY_HANDLED: {
+                  target: 'loadingNextStep',
+                  actions: assign({
+                    currentPluginError: undefined,
+                  }),
+                },
+              },
             },
           },
           onDone: [
@@ -166,12 +147,11 @@ export const createEngine = (
           const plugin = getPluginById(context.currentPluginId);
           printPluginBeeingApplied(plugin);
         },
-        printStepIsRunning: (context) => {
+        printStepFailed: (context) => {
           const plugin = getPluginById(context.currentPluginId);
           const step = plugin.steps[context.currentPluginStepIndex];
-          printStepIsRunning(step, context.currentPluginStepIndex);
+          printStepFailed(step);
         },
-        printStepFailed,
         printStepSucceeded,
       },
     },

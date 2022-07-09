@@ -4,9 +4,8 @@ import { Step } from './Step.type';
 const stepMock: Step = {
   name: 'step of a mocked plugin',
   commitMessage: 'chore(step-mock): doing something',
-  run: async () => {
-    return true;
-  },
+  failureProcedure: ['do this'],
+  run: async () => {},
 };
 
 export const createStepMock = (params?: Partial<Step>) => {

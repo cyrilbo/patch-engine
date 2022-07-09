@@ -1,28 +1,16 @@
 import { interpret } from 'xstate';
-import {
-  createEngine,
-  CreateEngineOptions,
-  MachineContext,
-} from './plugin.engine.machine';
+import { createEngine, MachineContext } from './plugin.engine.machine';
 import { createPluginMock, createStepMock } from './Plugin/Plugin.mock';
 import { vi } from 'vitest';
 import { Plugin } from './Plugin/Plugin.type';
 
-const createTestEngine = (plugins: Plugin[], options?: CreateEngineOptions) =>
-  createEngine(plugins, options).withConfig({
+const createTestEngine = (plugins: Plugin[]) =>
+  createEngine(plugins).withConfig({
     actions: {
-      printPluginBeeingApplied: () => {
-        //noop
-      },
-      printStepIsRunning: () => {
-        //noop
-      },
-      printStepFailed: () => {
-        //noop
-      },
-      printStepSucceeded: () => {
-        //noop
-      },
+      printPluginBeeingApplied: () => {},
+      printStepIsRunning: () => {},
+      printStepFailed: () => {},
+      printStepSucceeded: () => {},
     },
   });
 
@@ -37,26 +25,6 @@ describe('PluginEngine', () => {
     const engine = createTestEngine([pluginMock]);
     expect(engine.initialState.matches('runningPlugin')).toBeTruthy();
   });
-  it('should fail if prePluginRun hook fails', () =>
-    new Promise<void>((done) => {
-      const pluginMock = createPluginMock();
-      const onPrePluginRunMock = vi
-        .fn()
-        .mockRejectedValue('Dirty Git Repository');
-      const engine = createTestEngine([pluginMock], {
-        onPrePluginRun: onPrePluginRunMock,
-      });
-      interpret(engine)
-        .onTransition((state) => {
-          if (state.matches('failure')) {
-            expect(state.context.currentPluginError).toEqual(
-              'Dirty Git Repository',
-            );
-            done();
-          }
-        })
-        .start();
-    }));
 
   it('should set currentPluginId when running the plugin', () =>
     new Promise<void>((done) => {
@@ -143,7 +111,7 @@ describe('PluginEngine', () => {
       const engine = createTestEngine([pluginMock]);
       interpret(engine)
         .onTransition((state) => {
-          if (state.matches('failure')) {
+          if (state.matches('runningPlugin.failure')) {
             expect(stepRunMock).toHaveBeenCalledTimes(1);
             const expectedContext: MachineContext = {
               pluginsList: [pluginMock.id],
@@ -199,7 +167,7 @@ describe('PluginEngine', () => {
       const engine = createTestEngine([plugin1Mock, plugin2Mock]);
       interpret(engine)
         .onTransition((state) => {
-          if (state.matches('failure')) {
+          if (state.matches('runningPlugin.failure')) {
             expect(step1RunMock).toHaveBeenCalledTimes(1);
             expect(step2RunMock).toHaveBeenCalledTimes(1);
             expect(step3RunMock).not.toHaveBeenCalled();
