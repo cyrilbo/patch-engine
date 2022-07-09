@@ -1,22 +1,27 @@
 import { interpret } from 'xstate';
 import { waitFor } from 'xstate/lib/waitFor';
 
-import { GitService } from './../services/git/git.service.impl';
 import { createEngine } from './plugin.engine.machine';
-import { printPluginListToApply } from './plugin.engine.print';
+import {
+  printDirtyGitRepository,
+  printPluginListToApply,
+} from './plugin.engine.print';
 import { sortPlugins } from './core/sortPlugins.helper';
 import { Plugin } from './Plugin/Plugin.type';
 import { EngineIO } from './plugin.engine.io';
+import { GitService } from '../services/git/git.service.impl';
 
 const run = async (plugins: Plugin[]) => {
+  if (!(await GitService.checkIsGitRepositoryClean())) {
+    printDirtyGitRepository();
+    return;
+  }
   const sortedPlugins = sortPlugins(plugins);
   printPluginListToApply(sortedPlugins);
 
   const failureState = EngineIO.retrieveFailureState();
 
-  const engine = createEngine(sortedPlugins, {
-    onPrePluginRun: GitService.checkIsGitRepositoryClean,
-  });
+  const engine = createEngine(sortedPlugins);
   let failureStateAfterResume = !!failureState;
   const actor = interpret(engine)
     .onTransition((state) => {

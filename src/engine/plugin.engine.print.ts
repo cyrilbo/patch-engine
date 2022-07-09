@@ -27,3 +27,11 @@ export const printPluginBeeingApplied = (plugin: Plugin) => {
   );
   console.log();
 };
+
+export const printDirtyGitRepository = () => {
+  console.log(
+    chalk.red(
+      'Dirty git repository. Please commit your changes before running the engine',
+    ),
+  );
+};

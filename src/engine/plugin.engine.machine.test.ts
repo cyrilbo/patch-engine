@@ -1,15 +1,11 @@
 import { interpret } from 'xstate';
-import {
-  createEngine,
-  CreateEngineOptions,
-  MachineContext,
-} from './plugin.engine.machine';
+import { createEngine, MachineContext } from './plugin.engine.machine';
 import { createPluginMock, createStepMock } from './Plugin/Plugin.mock';
 import { vi } from 'vitest';
 import { Plugin } from './Plugin/Plugin.type';
 
-const createTestEngine = (plugins: Plugin[], options?: CreateEngineOptions) =>
-  createEngine(plugins, options).withConfig({
+const createTestEngine = (plugins: Plugin[]) =>
+  createEngine(plugins).withConfig({
     actions: {
       printPluginBeeingApplied: () => {},
       printStepIsRunning: () => {},
@@ -29,26 +25,6 @@ describe('PluginEngine', () => {
     const engine = createTestEngine([pluginMock]);
     expect(engine.initialState.matches('runningPlugin')).toBeTruthy();
   });
-  it('should fail if prePluginRun hook fails', () =>
-    new Promise<void>((done) => {
-      const pluginMock = createPluginMock();
-      const onPrePluginRunMock = vi
-        .fn()
-        .mockRejectedValue('Dirty Git Repository');
-      const engine = createTestEngine([pluginMock], {
-        onPrePluginRun: onPrePluginRunMock,
-      });
-      interpret(engine)
-        .onTransition((state) => {
-          if (state.matches('runningPlugin.failure')) {
-            expect(state.context.currentPluginError).toEqual(
-              'Dirty Git Repository',
-            );
-            done();
-          }
-        })
-        .start();
-    }));
 
   it('should set currentPluginId when running the plugin', () =>
     new Promise<void>((done) => {
