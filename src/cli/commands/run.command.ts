@@ -5,7 +5,7 @@ import {
   printPathDoesNotExist,
   printPluginNotFound,
 } from './run.command.print';
-import { $ } from 'zx';
+import { cd } from 'zx';
 
 export const runCommand = async (
   pluginId: string,
@@ -16,10 +16,13 @@ export const runCommand = async (
     printPluginNotFound(pluginId);
     return;
   }
+
   if (!fs.existsSync(options.path)) {
     printPathDoesNotExist(options.path);
     return;
   }
-  await $`cd ${options.path}`;
+
+  cd(options.path);
+
   await Engine.run([plugin]);
 };
