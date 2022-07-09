@@ -1,6 +1,6 @@
 import { Engine } from './../../engine/plugin.engine';
 import fs from 'fs-extra';
-import { plugins } from './../../plugins/plugins';
+import { availablePlugins } from './../../plugins/plugins';
 import {
   printPathDoesNotExist,
   printPluginNotFound,
@@ -11,7 +11,7 @@ export const runCommand = async (
   pluginId: string,
   options: { path: string },
 ) => {
-  const plugin = plugins[pluginId];
+  const plugin = availablePlugins[pluginId];
   if (!plugin) {
     printPluginNotFound(pluginId);
     return;

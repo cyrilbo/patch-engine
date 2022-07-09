@@ -1,5 +1,7 @@
-import { plugins } from '../../plugins/plugins';
+import { availablePlugins } from '../../plugins/plugins';
 
 export const listCommand = () => {
-  Object.values(plugins).forEach((plugin) => console.log('- ' + plugin.id));
+  Object.values(availablePlugins).forEach((plugin) =>
+    console.log('- ' + plugin.id),
+  );
 };
