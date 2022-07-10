@@ -10,3 +10,9 @@ export const availablePlugins: Record<string, Plugin> = {
 };
 
 export const AVAILABLE_PLUGINS_ID = Object.keys(availablePlugins);
+
+export const getPluginById = (id: string) => {
+  const plugin = availablePlugins[id];
+  if (plugin) return plugin;
+  throw new Error(`Plugin ${id} does not exist.`);
+};
