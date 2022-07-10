@@ -10,13 +10,16 @@ import { sortPlugins } from './core/sortPlugins.helper';
 import { Plugin } from './Plugin/Plugin.type';
 import { EngineIO } from './plugin.engine.io';
 import { GitService } from '../services/git/git.service.impl';
+import { loadAllAssociatedPlugins } from './core/loadAllPlugins.helper';
 
 const run = async (plugins: Plugin[]) => {
   if (!(await GitService.checkIsGitRepositoryClean())) {
     printDirtyGitRepository();
     return;
   }
-  const sortedPlugins = sortPlugins(plugins);
+
+  const allPluginsToRun = loadAllAssociatedPlugins(plugins);
+  const sortedPlugins = sortPlugins(allPluginsToRun);
   printPluginListToApply(sortedPlugins);
 
   const failureState = EngineIO.retrieveFailureState();
